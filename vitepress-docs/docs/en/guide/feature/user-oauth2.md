@@ -1,9 +1,9 @@
 # OAuth2 Third-Party Login
 
 > [!WARNING] Note
-> Third-party login will automatically register an account using the user's email (emails with the same address will be considered the same account)
+> Third-party identity is keyed by `Issuer + Client ID + stable user ID`; OIDC providers should use `sub`. Email is an account attribute and is never used to auto-merge accounts.
 >
-> This account is the same as a registered account and can also set a password through the forgot password feature
+> If an email already belongs to a site account, sign in to that account first and explicitly link the provider under User Settings. New accounts need an email claim; requiring `email_verified=true` is an optional provider setting.
 
 ## Register OAuth2 on Third-Party Platforms
 
@@ -55,7 +55,11 @@ Reference: [Creating an OAuth App](https://docs.github.com/en/apps/oauth-apps/bu
 | Access Token URL | Endpoint to obtain Access Token |
 | Access Token Params Format | Token request format: `json` or `urlencoded` |
 | User Info URL | Endpoint to get user information |
+| OIDC Issuer | Provider issuer; optional, defaults to the UserInfo URL origin |
 | User Email Key | Key for email field in user info, supports JSONPath (e.g., `$[0].email`) |
+| Stable User ID Key | Stable provider identifier; use `sub` for OIDC; supports JSONPath |
+| Verified Email Claim Key | Email verification claim key; defaults to `email_verified` |
+| Require Verified Email | When enabled, new accounts require the verification claim to be `true` |
 | Redirect URL | OAuth2 callback URL |
 | Scope | OAuth2 permission scope |
 
@@ -69,6 +73,23 @@ https://your-frontend-domain/user/oauth2/callback
 Even if your site uses locale-prefixed routes, it is still recommended to configure the OAuth
 provider with the callback URL without a locale prefix to avoid callback mismatches between
 languages.
+
+## Identity Mapping and Explicit Linking
+
+- OIDC identity keys are `(Issuer, Client ID, sub)`. Email, username, display name, and avatar are never identity keys.
+- When a stable identity is not linked, the site can create a new account if an email claim is available. If that email already belongs to another site account, it is never linked silently: the provider must return a verified, untransformed email, and the user must confirm once on the callback page; otherwise, sign in to the existing account first.
+- After signing in, open **User Settings → Linked Login Methods**, choose the provider, and complete authorization to explicitly link it. The flow requires an authenticated site account and uses a short-lived, single-use OAuth state. It does not change the site's email, addresses, roles, or passkeys.
+- Legacy `user_info` did not record its source provider, so old subjects cannot be safely attributed during migration. The `v0.0.8` migration only creates `user_oauth_identities`; it does not update or link existing accounts. A legacy OAuth user whose provider verifies the same email sees a confirmation page; no old-account login or identity write occurs before the user confirms. The confirmation token is stored in KV for five minutes and is single-use.
+- If **Require Verified Email** is enabled, a new account is created only when the configured claim is boolean `true`, string `true`, or `1`. This option defaults to off for compatibility with providers that do not return `email_verified`.
+
+User identity-management endpoints:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/user_api/oauth2/identities` | Requires `x-user-token`; list the signed-in user's linked identities and configured providers |
+| POST | `/user_api/oauth2/link/start` | Requires `x-user-token`; start linking for a `clientID` and return an authorization URL/state |
+| POST | `/user_api/oauth2/link/complete` | Requires `x-user-token`; complete linking with `clientID`, `code`, and `state` |
+| POST | `/user_api/oauth2/legacy-link/confirm` | Does not require `x-user-token`; accepts only the callback page's five-minute, single-use `pendingToken` to confirm linking to an account with the verified email |
 
 ### Email Format Transformation
 

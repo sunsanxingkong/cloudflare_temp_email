@@ -33,7 +33,16 @@ const newOauth2Type = ref('custom')
 const fetchData = async () => {
     try {
         const res = await api.fetch(`/admin/user_oauth2_settings`)
-        Object.assign(userOauth2Settings.value, res)
+        userOauth2Settings.value = (Array.isArray(res) ? res : []).map((item: UserOauth2Settings) => ({
+            ...item,
+            issuer: item.issuer || '',
+            userIDKey: item.userIDKey || (
+                item.userInfoURL?.includes('api.github.com/user')
+                || item.userInfoURL?.includes('connect.linux.do/api/user') ? 'id' : 'sub'
+            ),
+            userEmailVerifiedKey: item.userEmailVerifiedKey || 'email_verified',
+            requireVerifiedEmail: item.requireVerifiedEmail ?? false,
+        }))
     } catch (error) {
         message.error((error as Error).message || "error");
     }
@@ -59,6 +68,9 @@ const addNewOauth2 = () => {
             accessTokenFormat: 'json',
             userInfoURL: 'https://api.github.com/user',
             userEmailKey: 'email',
+            userIDKey: 'id',
+            userEmailVerifiedKey: 'email_verified',
+            requireVerifiedEmail: false,
             scope: 'user:email',
             icon: OAUTH2_ICONS.github,
         },
@@ -68,6 +80,9 @@ const addNewOauth2 = () => {
             accessTokenFormat: 'urlencoded',
             userInfoURL: 'https://connect.linux.do/api/user',
             userEmailKey: 'id',
+            userIDKey: 'id',
+            userEmailVerifiedKey: 'email_verified',
+            requireVerifiedEmail: false,
             scope: 'user',
             enableEmailFormat: true,
             userEmailFormat: '^(.+)$',
@@ -80,6 +95,9 @@ const addNewOauth2 = () => {
             accessTokenFormat: 'urlencoded',
             userInfoURL: 'https://youdomain/application/o/userinfo/',
             userEmailKey: 'email',
+            userIDKey: 'sub',
+            userEmailVerifiedKey: 'email_verified',
+            requireVerifiedEmail: false,
             scope: 'email openid',
             icon: OAUTH2_ICONS.authentik,
         },
@@ -95,7 +113,11 @@ const addNewOauth2 = () => {
         accessTokenURL: '',
         accessTokenFormat: '',
         userInfoURL: '',
+        issuer: '',
         userEmailKey: '',
+        userIDKey: 'sub',
+        userEmailVerifiedKey: 'email_verified',
+        requireVerifiedEmail: false,
         redirectURL: `${window.location.origin}/user/oauth2/callback`,
         logoutURL: '',
         scope: '',
@@ -145,6 +167,9 @@ onMounted(async () => {
         <n-card :bordered="false" embedded style="max-width: 600px;">
             <n-alert :show-icon="false" :bordered="false" type="warning" closable style="margin-bottom: 10px;">
                 {{ t("tip") }}
+            </n-alert>
+            <n-alert :show-icon="false" :bordered="false" type="info" style="margin-bottom: 10px;">
+                {{ t("identityMappingTip") }}
             </n-alert>
             <n-flex justify="end">
                 <n-button @click="showAddOauth2 = true" secondary :loading="loading">
@@ -196,8 +221,22 @@ onMounted(async () => {
                         <n-form-item-row label="User Info URL" required>
                             <n-input v-model:value="item.userInfoURL" />
                         </n-form-item-row>
+                        <n-form-item-row :label="t('issuer')">
+                            <n-input v-model:value="item.issuer" placeholder="https://issuer.example" />
+                        </n-form-item-row>
                         <n-form-item-row label="User Email Key (Support JSONPATH like $[0].email)" required>
                             <n-input v-model:value="item.userEmailKey" />
+                        </n-form-item-row>
+                        <n-form-item-row :label="t('userIDKey')" required>
+                            <n-input v-model:value="item.userIDKey" placeholder="sub" />
+                        </n-form-item-row>
+                        <n-form-item-row :label="t('userEmailVerifiedKey')">
+                            <n-input v-model:value="item.userEmailVerifiedKey" placeholder="email_verified" />
+                        </n-form-item-row>
+                        <n-form-item-row :label="t('requireVerifiedEmail')">
+                            <n-checkbox v-model:checked="item.requireVerifiedEmail">
+                                {{ t('enable') }}
+                            </n-checkbox>
                         </n-form-item-row>
                         <n-form-item-row :label="t('enableEmailFormat')">
                             <n-checkbox v-model:checked="item.enableEmailFormat">

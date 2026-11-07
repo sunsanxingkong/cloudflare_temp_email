@@ -25,6 +25,10 @@ api.post('/user_api/register', user.register);
 // oauth2 api
 api.get('/user_api/oauth2/login_url', oauth2.getOauth2LoginUrl);
 api.post('/user_api/oauth2/callback', oauth2.oauth2Login);
+api.get('/user_api/oauth2/identities', oauth2.getOAuthIdentities);
+api.post('/user_api/oauth2/link/start', oauth2.startOAuth2Link);
+api.post('/user_api/oauth2/link/complete', oauth2.completeOAuth2Link);
+api.post('/user_api/oauth2/legacy-link/confirm', oauth2.confirmOAuth2LegacyLink);
 
 // bind address api
 api.get('/user_api/bind_address', bind_address.getBindedAddresses);

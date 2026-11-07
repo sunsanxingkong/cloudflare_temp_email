@@ -39,6 +39,11 @@ const messages: LocaleMessages = {
     Oauth2FailedGetUserInfoMsg: "从 Oauth2 提供商获取用户信息失败",
     Oauth2FailedGetAccessTokenMsg: "从 Oauth2 提供商获取访问令牌失败",
     Oauth2FailedGetUserEmailMsg: "从 Oauth2 提供商获取用户邮箱失败",
+    Oauth2FailedGetUserSubMsg: "从 Oauth2 提供商获取稳定用户标识 (sub) 失败",
+    Oauth2EmailNotVerifiedMsg: "提供商未确认邮箱已验证 (email_verified=true)，无法创建新账号",
+    Oauth2ExistingEmailNeedsLinkMsg: "该邮箱已有站内账号。为保护账号，不会自动合并；此提供方未能证明邮箱已验证，请先登录原账号，再在用户设置中显式绑定此登录方式",
+    Oauth2IdentityAlreadyLinkedMsg: "此第三方身份已绑定到其他站内账号，无法重复绑定",
+    Oauth2LinkStateInvalidMsg: "身份绑定状态无效或已过期，请重新开始绑定",
 
     PasswordChangeDisabledMsg: "密码修改已禁用",
     NewPasswordRequiredMsg: "新密码不能为空",

@@ -143,6 +143,12 @@ export const useGlobalState = createGlobalState(
             get: () => _oauth2ClientIDSession.value || _oauth2ClientIDFallback.value,
             set: (v) => { _oauth2ClientIDSession.value = v; _oauth2ClientIDFallback.value = v; }
         });
+        const _oauth2ModeSession = useSessionStorage('userOauth2SessionMode', 'login');
+        const _oauth2ModeFallback = useStorage('userOauth2SessionMode_fb', 'login');
+        const userOauth2SessionMode = computed({
+            get: () => _oauth2ModeSession.value || _oauth2ModeFallback.value || 'login',
+            set: (v) => { _oauth2ModeSession.value = v; _oauth2ModeFallback.value = v; }
+        });
         const browserFingerprint = ref('');
         return {
             isDark,
@@ -182,6 +188,7 @@ export const useGlobalState = createGlobalState(
             showAdminPage,
             userOauth2SessionState,
             userOauth2SessionClientID,
+            userOauth2SessionMode,
             useSimpleIndex,
             addressPassword,
             browserFingerprint,

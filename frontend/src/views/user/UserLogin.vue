@@ -13,7 +13,7 @@ import Turnstile from '../../components/Turnstile.vue';
 
 const {
     userJwt, userOpenSettings, openSettings,
-    userOauth2SessionState, userOauth2SessionClientID
+    userOauth2SessionState, userOauth2SessionClientID, userOauth2SessionMode
 } = useGlobalState()
 const message = useMessage();
 
@@ -164,8 +164,15 @@ const passkeyLogin = async () => {
 const oauth2Login = async (clientID) => {
     try {
         userOauth2SessionClientID.value = clientID;
-        userOauth2SessionState.value = Math.random().toString(36).substring(2);
-        const res = await api.fetch(`/user_api/oauth2/login_url?clientID=${clientID}&state=${userOauth2SessionState.value}`);
+        userOauth2SessionMode.value = 'login';
+        const stateBytes = new Uint8Array(32);
+        crypto.getRandomValues(stateBytes);
+        userOauth2SessionState.value = Array.from(stateBytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        const params = new URLSearchParams({
+            clientID,
+            state: userOauth2SessionState.value,
+        });
+        const res = await api.fetch(`/user_api/oauth2/login_url?${params.toString()}`);
         // redirect to oauth2 login page
         location.href = res.url;
     } catch (error) {

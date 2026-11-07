@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useScopedI18n } from '@/i18n/app'
 import { startRegistration } from '@simplewebauthn/browser';
 import { NButton, NPopconfirm } from 'naive-ui'
@@ -7,7 +7,10 @@ import { NButton, NPopconfirm } from 'naive-ui'
 import { useGlobalState } from '../../store'
 import { api } from '../../api'
 
-const { userJwt, userSettings, } = useGlobalState()
+const {
+    loading, userJwt, userSettings,
+    userOauth2SessionState, userOauth2SessionClientID, userOauth2SessionMode,
+} = useGlobalState()
 const message = useMessage()
 
 const showLogout = ref(false)
@@ -17,8 +20,41 @@ const showPasskeyList = ref(false)
 const showRenamePasskey = ref(false)
 const currentPasskeyId = ref(null)
 const currentPasskeyName = ref('')
+const oauthProviders = ref([])
+const linkedOAuthIdentities = ref([])
 
 const { t } = useScopedI18n('views.user.UserSettings')
+
+const fetchOAuthIdentities = async () => {
+    try {
+        const data = await api.fetch('/user_api/oauth2/identities')
+        oauthProviders.value = data.providers || []
+        linkedOAuthIdentities.value = data.identities || []
+    } catch (e) {
+        console.error(e)
+        message.error(e.message)
+    }
+}
+
+const isOAuthProviderLinked = (provider) => linkedOAuthIdentities.value.some(
+    (identity) => identity.client_id === provider.clientID && identity.issuer === provider.issuer
+)
+
+const linkOAuthProvider = async (provider) => {
+    try {
+        const result = await api.fetch('/user_api/oauth2/link/start', {
+            method: 'POST',
+            body: JSON.stringify({ clientID: provider.clientID }),
+        })
+        userOauth2SessionMode.value = 'link'
+        userOauth2SessionState.value = result.state
+        userOauth2SessionClientID.value = provider.clientID
+        location.href = result.url
+    } catch (e) {
+        console.error(e)
+        message.error(e.message)
+    }
+}
 
 
 const logout = async () => {
@@ -153,10 +189,32 @@ const renamePasskey = async () => {
         showRenamePasskey.value = false
     }
 }
+
+onMounted(() => {
+    void fetchOAuthIdentities()
+})
 </script>
 
 <template>
     <div class="center" v-if="userSettings.user_email">
+        <n-card v-if="oauthProviders.length" :bordered="false" embedded>
+            <h3>{{ t('oauthLoginMethods') }}</h3>
+            <n-alert :show-icon="false" :bordered="false" type="info">
+                {{ t('oauthIdentityTip') }}
+            </n-alert>
+            <div v-for="provider in oauthProviders" :key="provider.clientID" class="oauth-provider-row">
+                <div class="oauth-provider-name">
+                    <span v-if="provider.icon" class="oauth-provider-icon" v-html="provider.icon"></span>
+                    <span>{{ provider.name }}</span>
+                </div>
+                <n-tag v-if="isOAuthProviderLinked(provider)" type="success">
+                    {{ t('providerLinked') }}
+                </n-tag>
+                <n-button v-else @click="linkOAuthProvider(provider)" secondary type="primary" :loading="loading">
+                    {{ t('linkOauthProvider') }}
+                </n-button>
+            </div>
+        </n-card>
         <n-card :bordered="false" embedded>
             <n-button @click="showPasskeyList = true; fetchPasskeyList();" secondary block strong>
                 {{ t('showPasskeyList') }}
@@ -218,5 +276,37 @@ const renamePasskey = async () => {
 .n-button {
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+.oauth-provider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--n-border-color);
+}
+
+.oauth-provider-row:last-child {
+    border-bottom: 0;
+}
+
+.oauth-provider-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oauth-provider-icon {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.oauth-provider-icon :deep(svg) {
+    max-width: 100%;
+    max-height: 100%;
 }
 </style>

@@ -88,6 +88,23 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_user_email ON users(user_email);
 
+CREATE TABLE IF NOT EXISTS user_oauth_identities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    issuer TEXT NOT NULL,
+    client_id TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_oauth_identity_subject
+ON user_oauth_identities(issuer, client_id, subject);
+
+CREATE INDEX IF NOT EXISTS idx_user_oauth_identity_user_id
+ON user_oauth_identities(user_id);
+
 CREATE TABLE IF NOT EXISTS users_address (
     id INTEGER PRIMARY KEY,
     user_id INTEGER,

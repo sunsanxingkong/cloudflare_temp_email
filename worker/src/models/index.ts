@@ -175,9 +175,13 @@ export type UserOauth2Settings = {
     accessTokenURL: string;
     accessTokenFormat: string;
     userInfoURL: string;
+    issuer?: string;               // OIDC issuer; falls back to the UserInfo URL origin
     redirectURL: string;
     logoutURL?: string;
     userEmailKey: string;
+    userIDKey?: string;            // Stable provider subject key; OIDC providers should use sub
+    userEmailVerifiedKey?: string; // Claim that must be true before creating a new account
+    requireVerifiedEmail?: boolean;
     enableEmailFormat?: boolean;  // Enable email format transformation
     userEmailFormat?: string;     // Regex pattern to match email
     userEmailReplace?: string;    // Replacement template using $1, $2, etc.

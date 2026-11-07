@@ -39,6 +39,11 @@ const messages: LocaleMessages = {
     Oauth2FailedGetUserInfoMsg: "Failed to get user info from Oauth2 provider",
     Oauth2FailedGetAccessTokenMsg: "Failed to get access token from Oauth2 provider",
     Oauth2FailedGetUserEmailMsg: "Failed to get user email from Oauth2 provider",
+    Oauth2FailedGetUserSubMsg: "Failed to get a stable user identifier (sub) from the Oauth2 provider",
+    Oauth2EmailNotVerifiedMsg: "The provider did not confirm email_verified=true; a new account cannot be created",
+    Oauth2ExistingEmailNeedsLinkMsg: "An account with this email already exists. It will not be auto-linked; this provider did not verify the email, so sign in to the existing account and explicitly link this provider in User Settings",
+    Oauth2IdentityAlreadyLinkedMsg: "This external identity is already linked to another site account",
+    Oauth2LinkStateInvalidMsg: "The identity-link state is invalid or expired. Please start linking again",
 
     PasswordChangeDisabledMsg: "Password change is disabled",
     NewPasswordRequiredMsg: "New password is required",

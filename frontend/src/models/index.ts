@@ -7,9 +7,13 @@ export type UserOauth2Settings = {
     accessTokenURL: string;
     accessTokenFormat?: string;
     userInfoURL: string;
+    issuer?: string;
     redirectURL: string;
     logoutURL?: string;
     userEmailKey: string;
+    userIDKey?: string;
+    userEmailVerifiedKey?: string;
+    requireVerifiedEmail?: boolean;
     enableEmailFormat?: boolean;  // Enable email format transformation
     userEmailFormat?: string;     // Regex pattern to match email
     userEmailReplace?: string;    // Replacement template using $1, $2, etc.

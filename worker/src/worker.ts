@@ -175,11 +175,13 @@ app.use('/user_api/*', async (c, next) => {
 	if (
 		c.req.path.startsWith("/user_api/open_settings")
 		|| c.req.path.startsWith("/user_api/register")
-		|| c.req.path.startsWith("/user_api/login")
-		|| c.req.path.startsWith("/user_api/verify_code")
-		|| c.req.path.startsWith("/user_api/passkey/authenticate_")
-		|| c.req.path.startsWith("/user_api/oauth2")
-	) {
+			|| c.req.path.startsWith("/user_api/login")
+			|| c.req.path.startsWith("/user_api/verify_code")
+			|| c.req.path.startsWith("/user_api/passkey/authenticate_")
+			|| c.req.path === "/user_api/oauth2/login_url"
+			|| c.req.path === "/user_api/oauth2/callback"
+			|| c.req.path === "/user_api/oauth2/legacy-link/confirm"
+		) {
 		await next();
 		return;
 	}

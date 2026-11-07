@@ -514,6 +514,22 @@ export const MESSAGE_REGISTRY = {
       "en": "Show Passkey List",
       "zh": "查看 Passkey 列表"
     },
+    "oauthLoginMethods": {
+      "en": "Linked Login Methods",
+      "zh": "已绑定的登录方式"
+    },
+    "oauthIdentityTip": {
+      "en": "Email is not used to auto-merge accounts. Sign in to this account before linking another provider. You may require a verified-email claim for new accounts in provider settings.",
+      "zh": "不会按邮箱自动合并账号。请先登录当前账号，再绑定其他提供方；可在提供方设置中要求新账号必须有已验证邮箱声明。"
+    },
+    "linkOauthProvider": {
+      "en": "Link provider",
+      "zh": "绑定此登录方式"
+    },
+    "providerLinked": {
+      "en": "Linked",
+      "zh": "已绑定"
+    },
     "updated_at": {
       "en": "Updated At",
       "zh": "更新时间"
@@ -943,6 +959,22 @@ export const MESSAGE_REGISTRY = {
     "codeNotFound": {
       "en": "code not found",
       "zh": "未找到授权码"
+    },
+    "identityLinked": {
+      "en": "Login provider linked successfully",
+      "zh": "登录方式绑定成功"
+    },
+    "linkConfirmTitle": {
+      "en": "An existing account was found",
+      "zh": "发现已有站内账号"
+    },
+    "linkConfirmDescription": {
+      "en": "The provider confirmed this email, but the account has not been linked automatically. Confirm only if you own this site account; continuing will link this login method and sign you in to that account.",
+      "zh": "提供方已验证此邮箱，但系统不会自动合并账号。只有确认这是你自己的站内账号时才继续；确认后会绑定此登录方式并登录该账号。"
+    },
+    "confirmLink": {
+      "en": "Confirm and link this login method",
+      "zh": "确认并绑定此登录方式"
     },
     "logging": {
       "en": "Logging in...",
@@ -1498,6 +1530,10 @@ export const MESSAGE_REGISTRY = {
       "en": "Enable Mail Address Allow List(Manually enterable)",
       "zh": "启用邮件地址白名单(可手动输入, 回车增加)"
     },
+    "identityMappingTip": {
+      "en": "OIDC providers should use sub as the stable user ID. Email is only an account attribute and never auto-links accounts. Existing users must sign in and explicitly link providers; requiring email_verified=true for new accounts is optional.",
+      "zh": "OIDC 提供方请将 sub 作为稳定用户 ID。邮箱仅为账号属性，不会用于自动合并；已有用户需先登录并显式绑定；新账号是否要求 email_verified=true 可选。"
+    },
     "icon": {
       "en": "Icon (SVG, please ensure trusted source)",
       "zh": "图标 (SVG, 请确保来源可信)"
@@ -1531,8 +1567,24 @@ export const MESSAGE_REGISTRY = {
       "zh": "保存成功"
     },
     "tip": {
-      "en": "Third-party login will automatically use the user's email to register an account (the same email will be regarded as the same account), this account is the same as the registered account, and you can also set the password through the forget password",
-      "zh": "第三方登录会自动使用用户邮箱注册账号(邮箱相同将视为同一账号), 此账号和注册的账号相同, 也可以通过忘记密码设置密码"
+      "en": "OAuth identity is keyed by the provider's stable user ID (OIDC: sub), not by email. An existing email is never auto-linked; sign in to the existing account and explicitly link the provider in User Settings.",
+      "zh": "OAuth 身份以提供方稳定用户 ID（OIDC 使用 sub）为准，不以邮箱作为身份键。邮箱已存在时不会自动绑定；请先登录原账号，再在用户设置中显式绑定。"
+    },
+    "issuer": {
+      "en": "OIDC Issuer (optional; defaults to UserInfo origin)",
+      "zh": "OIDC Issuer（可选；默认使用 UserInfo 域名）"
+    },
+    "userIDKey": {
+      "en": "Stable User ID Key (OIDC: sub; supports JSONPath)",
+      "zh": "稳定用户 ID 字段（OIDC 填 sub；支持 JSONPath）"
+    },
+    "userEmailVerifiedKey": {
+      "en": "Verified Email Claim Key",
+      "zh": "邮箱验证状态字段"
+    },
+    "requireVerifiedEmail": {
+      "en": "Require verified email for new accounts",
+      "zh": "新账号必须通过提供方验证邮箱"
     },
     "userEmailFormat": {
       "en": "Email Regex Pattern",
