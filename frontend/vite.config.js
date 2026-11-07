@@ -46,14 +46,19 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
       },
       manifest: {
-        name: 'Temp Email',
-        short_name: 'Temp Email',
-        description: 'Temp Email - Temporary Email',
+        name: '汐汐邮箱',
+        short_name: '汐汐邮箱',
+        description: '汐汐邮箱',
         theme_color: '#ffffff',
         icons: [
           {
-            src: '/logo.png',
+            src: '/logo-192.png',
             sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/logo.png',
+            sizes: '512x512',
             type: 'image/png'
           }
         ]
