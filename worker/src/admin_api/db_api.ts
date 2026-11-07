@@ -144,9 +144,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_user_passkeys_user_id_passkey_id ON user_p
 
 export default {
     initialize: async (c: Context<HonoCustomType>) => {
-        // remove all \r and \n characters from the query string
-        // split by ; and join with a ;\n
-        const query = DB_INIT_QUERIES.replace(/[\r\n]/g, "")
+        // Preserve word boundaries when normalizing SQL line breaks.
+        const query = DB_INIT_QUERIES.replace(/[\r\n]/g, " ")
             .split(";")
             .map((query) => query.trim())
             .join(";\n");
@@ -215,9 +214,8 @@ export default {
             }
         }
         if (version != CONSTANTS.DB_VERSION) {
-            // remove all \r and \n characters from the query string
-            // split by ; and join with a ;\n
-            const query = DB_INIT_QUERIES.replace(/[\r\n]/g, "")
+            // Preserve word boundaries when normalizing SQL line breaks.
+            const query = DB_INIT_QUERIES.replace(/[\r\n]/g, " ")
                 .split(";")
                 .map((query) => query.trim())
                 .join(";\n");
