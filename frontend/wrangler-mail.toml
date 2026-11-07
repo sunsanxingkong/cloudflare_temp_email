@@ -1,0 +1,11 @@
+name = "withered-star-27d7"
+compatibility_date = "2026-07-19"
+workers_dev = true
+
+[[routes]]
+pattern = "mail.xiximail.de5.net"
+custom_domain = true
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"

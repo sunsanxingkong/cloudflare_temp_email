@@ -1,0 +1,86 @@
+name: Deploy Mail Frontend Worker
+
+on:
+  push:
+    branches:
+      - branding/xiximail
+    paths:
+      - ".github/workflows/deploy_mail_frontend_worker.yaml"
+      - "frontend/wrangler-mail.toml"
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: "Deploy frontend assets to mail.xiximail.de5.net (production)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, '[deploy-mail-xiximail]')) || (github.event_name == 'workflow_dispatch' && inputs.confirm_production) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build frontend with production API
+        working-directory: frontend
+        run: pnpm run build:pages
+        env:
+          VITE_API_BASE: https://apimail.xiximail.de5.net
+
+      - name: Check expected frontend assets and API base
+        working-directory: frontend
+        run: |
+          test -s dist/index.html
+          test -s dist/logo.png
+          test -s dist/favicon.ico
+          grep -R -F 'https://apimail.xiximail.de5.net' dist/assets --include='*.js' >/dev/null
+
+      - name: Validate Worker deployment bundle
+        working-directory: frontend
+        run: pnpm exec wrangler deploy --dry-run --config wrangler-mail.toml
+        env:
+          CLOUDFLARE_ACCOUNT_ID: 2336aaa6ab5256561b4da7128a43d623
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy frontend assets to the existing mail Worker
+        working-directory: frontend
+        run: pnpm exec wrangler deploy --config wrangler-mail.toml
+        env:
+          CLOUDFLARE_ACCOUNT_ID: 2336aaa6ab5256561b4da7128a43d623
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Verify production title and logo
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            html="$(curl --fail --silent --show-error --location -H 'Cache-Control: no-cache' "https://mail.xiximail.de5.net/?brand-check=${GITHUB_SHA}" || true)"
+            if [[ "$html" == *"<title>汐汐邮箱</title>"* ]]; then
+              curl --fail --silent --show-error --location -o /dev/null "https://mail.xiximail.de5.net/logo.png?brand-check=${GITHUB_SHA}"
+              echo "Production title and logo verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Production title check did not observe the expected brand." >&2
+          exit 1
