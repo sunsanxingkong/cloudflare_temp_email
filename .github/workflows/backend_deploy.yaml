@@ -8,6 +8,12 @@ on:
     tags:
       - "*"
   workflow_dispatch:
+    inputs:
+      use_current_worker_config:
+        description: "Use existing xi Worker bindings when BACKEND_TOML is empty"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -52,8 +58,41 @@ jobs:
           export use_mail_wasm_parser=${{ secrets.BACKEND_USE_MAIL_WASM_PARSER }}
           
           cd worker/
-          # ✅ 修复核心：使用环境变量写入，避免 Shell 解析特殊字符
-          printf '%s\n' "$WRANGLER_TOML_CONTENT" > wrangler.toml
+          if [ -n "$WRANGLER_TOML_CONTENT" ]; then
+            printf '%s\n' "$WRANGLER_TOML_CONTENT" > wrangler.toml
+          elif [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "${{ inputs.use_current_worker_config }}" = "true" ]; then
+            set -euo pipefail
+            echo "BACKEND_TOML is empty; preserving the live xi Worker bindings and dashboard variables."
+            worker_settings="$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/xi/settings")"
+            printf '%s' "$worker_settings" | jq -e '.success == true' >/dev/null
+            db_id="$(printf '%s' "$worker_settings" | jq -er '.result.bindings[] | select(.name == "DB" and .type == "d1") | (.database_id // .id)')"
+            kv_id="$(printf '%s' "$worker_settings" | jq -er '.result.bindings[] | select(.name == "KV" and .type == "kv_namespace") | .namespace_id')"
+            compatibility_date="$(printf '%s' "$worker_settings" | jq -er '.result.compatibility_date')"
+            printf '%s' "$worker_settings" | jq -e '(.result.compatibility_flags // []) | index("nodejs_compat") != null' >/dev/null
+            cat > wrangler.toml <<EOF
+          name = "xi"
+          main = "src/worker.ts"
+          compatibility_date = "${compatibility_date}"
+          compatibility_flags = ["nodejs_compat"]
+          keep_vars = true
+          workers_dev = false
+
+          [[d1_databases]]
+          binding = "DB"
+          database_name = "xz"
+          database_id = "${db_id}"
+
+          [[kv_namespaces]]
+          binding = "KV"
+          id = "${kv_id}"
+          EOF
+          else
+            echo "BACKEND_TOML is empty. Set it or manually dispatch with use_current_worker_config=true." >&2
+            exit 1
+          fi
           
           pnpm install --no-frozen-lockfile
 
